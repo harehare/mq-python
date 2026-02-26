@@ -1,0 +1,23 @@
+[package]
+authors = ["Takahiro Sato <harehare1110@gmail.com>"]
+categories = ["command-line-utilities", "text-processing"]
+description = "Python bindings for mq Markdown processing"
+edition = "2024"
+homepage = "https://mqlang.org/"
+keywords = ["markdown", "jq", "query"]
+license = "MIT"
+name = "mq-python"
+publish = false
+readme = "README.md"
+repository = "https://github.com/harehare/mq"
+version = "0.5.16"
+
+[lib]
+crate-type = ["cdylib"]
+name = "mq"
+
+[dependencies]
+mq-lang = "0.5.16"
+mq-markdown = "0.5.16"
+pyo3 = {version = "0.28.2", features = ["extension-module", "abi3-py39"]}
+
