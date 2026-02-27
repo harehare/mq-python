@@ -26,6 +26,7 @@ requires = ["maturin>=1.0,<2.0"]
 
 [dependency-groups]
 dev = [
+  "maturin>=1.0,<2.0",
   "pytest>=8.3.5",
 ]
 
