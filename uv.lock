@@ -31,7 +31,7 @@ wheels = [
 
 [[package]]
 name = "markdown-query"
-version = "0.5.20"
+version = "0.5.22"
 source = { editable = "." }
 
 [package.dev-dependencies]
