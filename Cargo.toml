@@ -19,5 +19,5 @@ name = "mq"
 [dependencies]
 mq-lang = "0.5.24"
 mq-markdown = "0.5.24"
-pyo3 = {version = "0.28.2", features = ["extension-module", "abi3-py39"]}
+pyo3 = {version = "0.28.3", features = ["extension-module", "abi3-py39"]}
 
