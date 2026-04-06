@@ -10,14 +10,14 @@ name = "mq-python"
 publish = false
 readme = "README.md"
 repository = "https://github.com/harehare/mq"
-version = "0.5.24"
+version = "0.5.25"
 
 [lib]
 crate-type = ["cdylib"]
 name = "mq"
 
 [dependencies]
-mq-lang = "0.5.24"
-mq-markdown = "0.5.24"
+mq-lang = "0.5.25"
+mq-markdown = "0.5.25"
 pyo3 = {version = "0.28.3", features = ["extension-module", "abi3-py39"]}
 
