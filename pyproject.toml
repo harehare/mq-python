@@ -13,7 +13,7 @@ license = {text = "MIT"}
 name = "markdown-query"
 readme = "README.md"
 requires-python = ">=3.10"
-version = "0.5.25"
+version = "0.5.26"
 
 [tool.maturin]
 module-name = "mq.mq"
@@ -21,7 +21,8 @@ python-packages = ["mq"]
 python-source = "src"
 
 [build-system]
-build-backend = "maturin"
+build-backend = "_maturin_wrapper"
+backend-path = ["."]
 requires = ["maturin>=1.0,<2.0"]
 
 [dependency-groups]
