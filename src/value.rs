@@ -4,9 +4,16 @@ use std::{collections::HashMap, fmt};
 #[pyclass(from_py_object)]
 #[derive(Debug, Clone)]
 pub enum MQValue {
-    Array { value: Vec<MQValue> },
-    Dict { value: HashMap<String, MQValue> },
-    Markdown { value: String, markdown_type: MarkdownType },
+    Array {
+        value: Vec<MQValue>,
+    },
+    Dict {
+        value: HashMap<String, MQValue>,
+    },
+    Markdown {
+        value: String,
+        markdown_type: MarkdownType,
+    },
 }
 
 impl fmt::Display for MQValue {
@@ -15,7 +22,11 @@ impl fmt::Display for MQValue {
             MQValue::Array { value } => write!(
                 f,
                 "{}",
-                value.iter().map(|val| val.text()).collect::<Vec<String>>().join("\n")
+                value
+                    .iter()
+                    .map(|val| val.text())
+                    .collect::<Vec<String>>()
+                    .join("\n")
             ),
             MQValue::Dict { value } => write!(
                 f,
@@ -94,11 +105,14 @@ impl From<mq_lang::RuntimeValue> for MQValue {
                 value: arr.into_iter().map(|v| v.into()).collect(),
             },
             mq_lang::RuntimeValue::Dict(map) => MQValue::Dict {
-                value: map.into_iter().map(|(k, v)| (k.as_str(), v.into())).collect(),
+                value: map
+                    .into_iter()
+                    .map(|(k, v)| (k.as_str(), v.into()))
+                    .collect(),
             },
             mq_lang::RuntimeValue::Markdown(node, _) => MQValue::Markdown {
                 value: node.to_string(),
-                markdown_type: node.into(),
+                markdown_type: (*node).into(),
             },
             mq_lang::RuntimeValue::String(s) => MQValue::Markdown {
                 value: s,
@@ -225,7 +239,10 @@ impl MQValue {
         match self {
             MQValue::Array { value: arr } => format!(
                 "MQValue::ARRAY([{}])",
-                arr.iter().map(|v| v.__repr__()).collect::<Vec<_>>().join(", ")
+                arr.iter()
+                    .map(|v| v.__repr__())
+                    .collect::<Vec<_>>()
+                    .join(", ")
             ),
             MQValue::Dict { value: map } => {
                 format!(
@@ -236,7 +253,10 @@ impl MQValue {
                         .join(", ")
                 )
             }
-            MQValue::Markdown { value, markdown_type } => {
+            MQValue::Markdown {
+                value,
+                markdown_type,
+            } => {
                 format!("MQValue::Markdown(\"{}\", {:?})", value, markdown_type)
             }
         }
