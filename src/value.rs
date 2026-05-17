@@ -137,6 +137,10 @@ impl From<mq_lang::RuntimeValue> for MQValue {
                 value: "".to_string(),
                 markdown_type: MarkdownType::Empty,
             },
+            mq_lang::RuntimeValue::Bytes(b) => MQValue::Markdown {
+                value: String::from_utf8_lossy(&b).to_string(),
+                markdown_type: MarkdownType::Text,
+            },
             mq_lang::RuntimeValue::None => MQValue::Markdown {
                 value: "".to_string(),
                 markdown_type: MarkdownType::Empty,
