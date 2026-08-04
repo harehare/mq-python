@@ -102,12 +102,12 @@ impl From<mq_lang::RuntimeValue> for MQValue {
     fn from(value: mq_lang::RuntimeValue) -> Self {
         match value {
             mq_lang::RuntimeValue::Array(arr) => MQValue::Array {
-                value: arr.into_iter().map(|v| v.into()).collect(),
+                value: arr.iter().cloned().map(|v| v.into()).collect(),
             },
             mq_lang::RuntimeValue::Dict(map) => MQValue::Dict {
                 value: map
-                    .into_iter()
-                    .map(|(k, v)| (k.as_str(), v.into()))
+                    .iter()
+                    .map(|(k, v)| (k.as_str(), v.clone().into()))
                     .collect(),
             },
             mq_lang::RuntimeValue::Markdown(node, _) => MQValue::Markdown {
