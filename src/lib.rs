@@ -209,6 +209,7 @@ fn html_to_markdown(content: &str, options: Option<ConversionOptions>) -> PyResu
                 extract_scripts_as_code_blocks: opts.extract_scripts_as_code_blocks,
                 generate_front_matter: opts.generate_front_matter,
                 use_title_as_h1: opts.use_title_as_h1,
+                base_url: None,
             },
             None => mq_markdown::ConversionOptions::default(),
         },
