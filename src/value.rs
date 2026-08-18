@@ -132,8 +132,7 @@ impl From<mq_lang::RuntimeValue> for MQValue {
             },
             mq_lang::RuntimeValue::Function(..)
             | mq_lang::RuntimeValue::NativeFunction(..)
-            | mq_lang::RuntimeValue::Module(..)
-            | mq_lang::RuntimeValue::Ast(..) => MQValue::Markdown {
+            | mq_lang::RuntimeValue::Module(..) => MQValue::Markdown {
                 value: "".to_string(),
                 markdown_type: MarkdownType::Empty,
             },
