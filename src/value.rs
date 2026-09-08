@@ -112,10 +112,10 @@ impl From<mq_lang::RuntimeValue> for MQValue {
             },
             mq_lang::RuntimeValue::Markdown(node, _) => MQValue::Markdown {
                 value: node.to_string(),
-                markdown_type: (*node).into(),
+                markdown_type: (*node).clone().into(),
             },
             mq_lang::RuntimeValue::String(s) => MQValue::Markdown {
-                value: s,
+                value: s.to_string(),
                 markdown_type: MarkdownType::Text,
             },
             mq_lang::RuntimeValue::Symbol(i) => MQValue::Markdown {
