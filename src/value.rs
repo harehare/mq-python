@@ -1,6 +1,54 @@
 use pyo3::pyclass;
 use std::{collections::HashMap, fmt};
 
+/// A line/column location in the source document (both 1-based).
+#[pyclass(eq, frozen, get_all, from_py_object)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Point {
+    pub line: usize,
+    pub column: usize,
+}
+
+#[pyclass(eq, frozen, get_all, from_py_object)]
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct Position {
+    pub start: Point,
+    pub end: Point,
+}
+
+impl From<mq_markdown::Position> for Position {
+    fn from(p: mq_markdown::Position) -> Self {
+        Self {
+            start: Point {
+                line: p.start.line,
+                column: p.start.column,
+            },
+            end: Point {
+                line: p.end.line,
+                column: p.end.column,
+            },
+        }
+    }
+}
+
+#[pymethods]
+impl Point {
+    fn __repr__(&self) -> String {
+        format!("Point(line={}, column={})", self.line, self.column)
+    }
+}
+
+#[pymethods]
+impl Position {
+    fn __repr__(&self) -> String {
+        format!(
+            "Position(start={}, end={})",
+            self.start.__repr__(),
+            self.end.__repr__()
+        )
+    }
+}
+
 #[pyclass(from_py_object)]
 #[derive(Debug, Clone)]
 pub enum MQValue {
@@ -13,6 +61,7 @@ pub enum MQValue {
     Markdown {
         value: String,
         markdown_type: MarkdownType,
+        position: Option<Position>,
     },
 }
 
@@ -50,10 +99,12 @@ impl PartialEq for MQValue {
                 MQValue::Markdown {
                     value: a,
                     markdown_type: at,
+                    ..
                 },
                 MQValue::Markdown {
                     value: b,
                     markdown_type: bt,
+                    ..
                 },
             ) => a == b && at == bt,
             _ => false,
@@ -113,40 +164,49 @@ impl From<mq_lang::RuntimeValue> for MQValue {
             mq_lang::RuntimeValue::Markdown(node, _) => MQValue::Markdown {
                 value: node.to_string(),
                 markdown_type: (*node).clone().into(),
+                position: node.position().map(Into::into),
             },
             mq_lang::RuntimeValue::String(s) => MQValue::Markdown {
                 value: s.to_string(),
                 markdown_type: MarkdownType::Text,
+                position: None,
             },
             mq_lang::RuntimeValue::Symbol(i) => MQValue::Markdown {
                 value: i.as_str(),
                 markdown_type: MarkdownType::Text,
+                position: None,
             },
             mq_lang::RuntimeValue::Number(n) => MQValue::Markdown {
                 value: n.to_string(),
                 markdown_type: MarkdownType::Text,
+                position: None,
             },
             mq_lang::RuntimeValue::Boolean(b) => MQValue::Markdown {
                 value: b.to_string(),
                 markdown_type: MarkdownType::Text,
+                position: None,
             },
             mq_lang::RuntimeValue::Closure(..) | mq_lang::RuntimeValue::NativeFunction(..) => {
                 MQValue::Markdown {
                     value: "".to_string(),
                     markdown_type: MarkdownType::Empty,
+                    position: None,
                 }
             }
             mq_lang::RuntimeValue::Bytes(b) => MQValue::Markdown {
                 value: String::from_utf8_lossy(&b).to_string(),
                 markdown_type: MarkdownType::Text,
+                position: None,
             },
             mq_lang::RuntimeValue::None => MQValue::Markdown {
                 value: "".to_string(),
                 markdown_type: MarkdownType::Empty,
+                position: None,
             },
             _ => MQValue::Markdown {
                 value: "".to_string(),
                 markdown_type: MarkdownType::Empty,
+                position: None,
             },
         }
     }
@@ -216,6 +276,14 @@ impl MQValue {
         }
     }
 
+    #[getter]
+    pub fn position(&self) -> Option<Position> {
+        match self {
+            MQValue::Markdown { position, .. } => *position,
+            _ => None,
+        }
+    }
+
     pub fn is_array(&self) -> bool {
         matches!(self, MQValue::Array { .. })
     }
@@ -263,6 +331,7 @@ impl MQValue {
             MQValue::Markdown {
                 value,
                 markdown_type,
+                ..
             } => {
                 format!("MQValue::Markdown(\"{}\", {:?})", value, markdown_type)
             }
