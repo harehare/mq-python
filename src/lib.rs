@@ -81,7 +81,7 @@ pub mod value;
 
 use pyo3::prelude::*;
 use result::MQResult;
-use value::MQValue;
+use value::{MQValue, Point, Position};
 
 #[pyclass(eq, eq_int, from_py_object)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -189,14 +189,21 @@ fn run(code: &str, content: &str, options: Option<Options>) -> PyResult<MQResult
         InputFormat::Raw => Ok(mq_lang::raw_input(content)),
         InputFormat::Null => Ok(mq_lang::null_input()),
     }
-    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Error evaluating query: {}", e)))?;
+    .map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Error evaluating query: {}", e))
+    })?;
 
     engine
         .eval(code, input.into_iter())
         .map(|values| MQResult {
             values: values.into_iter().map(Into::into).collect::<Vec<_>>(),
         })
-        .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Error evaluating query: {}", e)))
+        .map_err(|e| {
+            PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+                "Error evaluating query: {}",
+                e
+            ))
+        })
 }
 
 #[pyfunction]
@@ -214,7 +221,12 @@ fn html_to_markdown(content: &str, options: Option<ConversionOptions>) -> PyResu
             None => mq_markdown::ConversionOptions::default(),
         },
     )
-    .map_err(|e| PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Error converting HTML to Markdown: {}", e)))
+    .map_err(|e| {
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+            "Error converting HTML to Markdown: {}",
+            e
+        ))
+    })
 }
 
 #[pymodule]
@@ -226,6 +238,8 @@ fn mq(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<Options>()?;
     m.add_class::<MQResult>()?;
     m.add_class::<MQValue>()?;
+    m.add_class::<Position>()?;
+    m.add_class::<Point>()?;
     m.add_class::<ConversionOptions>()?;
     m.add_function(wrap_pyfunction!(run, m)?)?;
     m.add_function(wrap_pyfunction!(html_to_markdown, m)?)?;

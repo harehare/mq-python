@@ -77,3 +77,23 @@ def test_html_to_markdown():
     expected_markdown = "# Hello World\n\nThis is a **test**."
     markdown = mq.html_to_markdown(html_content)
     assert markdown.strip() == expected_markdown
+
+
+def test_position_heading():
+    result = mq.run(".h", "# Heading")
+    pos = result[0].position
+    assert pos is not None
+    assert (pos.start.line, pos.start.column) == (1, 1)
+    assert (pos.end.line, pos.end.column) == (1, 10)
+
+
+def test_position_multiline():
+    result = mq.run(".code", "text\n\n```py\nx = 1\n```\n")
+    pos = next(v.position for v in (result[i] for i in range(len(result))) if v)
+    assert pos.start.line == 3
+    assert pos.end.line == 5
+
+
+def test_position_none_for_computed_value():
+    result = mq.run('"abc"', "# Heading")
+    assert result[0].position is None

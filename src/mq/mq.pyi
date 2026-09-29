@@ -80,10 +80,36 @@ class MarkdownType(Enum):
     Text: int = 31
     Empty: int = 32
 
+class Point:
+    """A location in the source document (1-based)."""
+
+    @property
+    def line(self) -> int: ...
+    @property
+    def column(self) -> int: ...
+
+class Position:
+    """The start and end location of a node in the source document."""
+
+    @property
+    def start(self) -> Point: ...
+    @property
+    def end(self) -> Point: ...
+
 class MQValue:
     """
     Represents a value in the mq query result.
     """
+
+    @property
+    def position(self) -> Optional[Position]:
+        """
+        Get the position of the node in the source document.
+
+        Returns:
+            Optional[Position]: The start/end line and column, or None if the
+            value has no source position (e.g. computed strings, numbers).
+        """
 
     @property
     def text(self) -> str:
