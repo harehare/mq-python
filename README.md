@@ -69,25 +69,20 @@ mq supports multiple input formats:
 import mq
 
 # Markdown (default)
-options = mq.Options()
-options.input_format = mq.InputFormat.MARKDOWN
-result = mq.run(".h1", "# Heading", options)
+result = mq.run(".h1", "# Heading", mq.Options(input_format=mq.InputFormat.MARKDOWN))
 
 # MDX (Markdown with JSX)
-options = mq.Options()
-options.input_format = mq.InputFormat.MDX
+options = mq.Options(input_format=mq.InputFormat.MDX)
 result = mq.run("select(is_mdx())", "# MDX\n\n<Component />", options)
 print(result.values)  # ['<Component />']
 
 # HTML
-options = mq.Options()
-options.input_format = mq.InputFormat.HTML
+options = mq.Options(input_format=mq.InputFormat.HTML)
 result = mq.run('select(contains("Hello"))', "<h1>Hello</h1><p>World</p>", options)
 print(result.values)  # ['# Hello']
 
 # Plain text
-options = mq.Options()
-options.input_format = mq.InputFormat.TEXT
+options = mq.Options(input_format=mq.InputFormat.TEXT)
 result = mq.run('select(contains("2"))', "Line 1\nLine 2\nLine 3", options)
 print(result.values)  # ['Line 2']
 ```
@@ -100,23 +95,47 @@ Available input formats:
 - `InputFormat.RAW` - Raw string input
 - `InputFormat.NULL` - Null input
 
-### Rendering Options
+### Options
 
-Customize the output rendering:
+`mq.Options` accepts keyword arguments, and every option can also be set as an attribute:
 
 ```python
 import mq
 
-options = mq.Options()
-options.input_format = mq.InputFormat.MARKDOWN
-options.list_style = mq.ListStyle.PLUS        # Use '+' for list items
-options.link_title_style = mq.TitleSurroundStyle.SINGLE  # Use single quotes for link titles
-options.link_url_style = mq.UrlSurroundStyle.ANGLE       # Use angle brackets for URLs
+options = mq.Options(input_format=mq.InputFormat.HTML, list_style=mq.ListStyle.PLUS)
+options.link_url_style = mq.UrlSurroundStyle.ANGLE
+```
 
+Options that are not set use their defaults (shown below).
+
+### Output Formats and Rendering Options
+
+Use `MQResult.render()` to render the result as Markdown, HTML or plain text.
+The rendering options (`list_style`, `link_title_style`, `link_url_style`) are applied to the output:
+
+```python
+import mq
+
+markdown = "# Title\n\n- Item 1\n- Item 2\n\n[link](https://example.com \"title\")"
+
+options = mq.Options(
+    list_style=mq.ListStyle.PLUS,                      # Use '+' for list items
+    link_title_style=mq.TitleSurroundStyle.SINGLE,     # Use single quotes for link titles
+    link_url_style=mq.UrlSurroundStyle.ANGLE,          # Use angle brackets for URLs
+)
 result = mq.run(".", markdown, options)
+
+print(result.render())                          # Markdown (default)
+print(result.render(mq.OutputFormat.HTML))      # HTML
+print(result.render(mq.OutputFormat.TEXT))      # Plain text
+
+# The default format of render() can be set with output_format
+options = mq.Options(output_format=mq.OutputFormat.HTML)
+print(mq.run(".h1", "# Hello", options).render())  # '<h1>Hello</h1>\n'
 ```
 
 Available options:
+- `OutputFormat`: `MARKDOWN` (default), `HTML`, `TEXT`
 - `ListStyle`: `DASH` (default), `PLUS`, `STAR`
 - `TitleSurroundStyle`: `DOUBLE` (default), `SINGLE`, `PAREN`
 - `UrlSurroundStyle`: `NONE` (default), `ANGLE`
@@ -169,14 +188,14 @@ print("# H1" in result.values)  # True
 
 Each `MQValue` has the following properties:
 - `text` - The string representation of the value
-- `values` - For arrays, returns the list of values
+- `values` - For arrays, returns the list of values (otherwise a list containing the value itself)
 - `markdown_type` - The type of Markdown element (e.g., `Heading`, `Code`, `List`)
 - `is_array()` - Check if the value is an array
 - `is_markdown()` - Check if the value is a Markdown element
 
 ### Error Handling
 
-Invalid queries raise a `RuntimeError`:
+Invalid queries and inputs that cannot be parsed raise a `RuntimeError`:
 
 ```python
 import mq
@@ -192,21 +211,22 @@ except RuntimeError as e:
 ### Building from Source
 
 ```bash
-git clone https://github.com/harehare/mq
-cd mq/crates/mq-python
-pip install maturin
-maturin develop
+git clone https://github.com/harehare/mq-python
+cd mq-python
+uv sync --dev
+uv run maturin develop
 ```
 
 ### Running Tests
 
 ```bash
-pytest tests/
+uv run pytest tests/
 ```
+
 ## Support
 
-- 🐛 [Report bugs](https://github.com/harehare/mq/issues)
-- 💡 [Request features](https://github.com/harehare/mq/issues)
+- 🐛 [Report bugs](https://github.com/harehare/mq-python/issues)
+- 💡 [Request features](https://github.com/harehare/mq-python/issues)
 - 📖 [Read the documentation](https://mqlang.org/book/)
 - 📦 [PyPI package](https://pypi.org/project/markdown-query/)
 

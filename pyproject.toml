@@ -34,5 +34,5 @@ dev = [
 [project.urls]
 Documentation = "https://mqlang.org/book/"
 Homepage = "https://mqlang.org/"
-Issues = "https://github.com/harehare/mq/issues"
-Repository = "https://github.com/harehare/mq.git"
+Issues = "https://github.com/harehare/mq-python/issues"
+Repository = "https://github.com/harehare/mq-python.git"

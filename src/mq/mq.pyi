@@ -4,81 +4,105 @@ from enum import Enum
 class InputFormat(Enum):
     """The format of the input document."""
 
-    MARKDOWN: 1
-    MDX: 2
-    TEXT: 3
-    HTML: 4
-    RAW: 5
-    NULL: 6
+    MARKDOWN = 1
+    MDX = 2
+    TEXT = 3
+    HTML = 4
+    RAW = 5
+    NULL = 6
+
+class OutputFormat(Enum):
+    """The format used when rendering a result with `MQResult.render()`."""
+
+    MARKDOWN = 1
+    HTML = 2
+    TEXT = 3
 
 class ListStyle(Enum):
     """Style to use for markdown lists."""
 
-    DASH: 1
-    PLUS: 2
-    STAR: 3
+    DASH = 1
+    PLUS = 2
+    STAR = 3
 
 class TitleSurroundStyle(Enum):
     """Style for surrounding link titles."""
 
-    DOUBLE: 1
-    SINGLE: 2
-    PAREN: 3
+    DOUBLE = 1
+    SINGLE = 2
+    PAREN = 3
 
 class UrlSurroundStyle(Enum):
     """Style for surrounding URLs."""
 
-    ANGLE: 1
-    NONE: 2
+    ANGLE = 1
+    NONE = 2
 
 class Options:
-    """Configuration options for mq processing."""
+    """Configuration options for mq processing.
+
+    All options can be passed as keyword arguments or set as attributes.
+    """
+
+    input_format: Optional[InputFormat]
+    output_format: Optional[OutputFormat]
+    list_style: Optional[ListStyle]
+    link_title_style: Optional[TitleSurroundStyle]
+    link_url_style: Optional[UrlSurroundStyle]
+
+    def __init__(
+        self,
+        input_format: Optional[InputFormat] = None,
+        output_format: Optional[OutputFormat] = None,
+        list_style: Optional[ListStyle] = None,
+        link_title_style: Optional[TitleSurroundStyle] = None,
+        link_url_style: Optional[UrlSurroundStyle] = None,
+    ) -> None: ...
+
+class ConversionOptions:
+    """Options for `html_to_markdown`."""
+
+    extract_scripts_as_code_blocks: bool
+    generate_front_matter: bool
+    use_title_as_h1: bool
 
     def __init__(self) -> None: ...
-    @property
-    def input_format(self) -> InputFormat: ...
-    @property
-    def list_style(self) -> ListStyle: ...
-    @property
-    def link_title_style(self) -> TitleSurroundStyle: ...
-    @property
-    def link_url_style(self) -> UrlSurroundStyle: ...
 
 class MarkdownType(Enum):
     """Types of Markdown elements."""
 
-    Blockquote: int = 1
-    Break: int = 2
-    Definition: int = 3
-    Delete: int = 4
-    Heading: int = 5
-    Emphasis: int = 6
-    Footnote: int = 7
-    FootnoteRef: int = 8
-    Html: int = 9
-    Yaml: int = 10
-    Toml: int = 11
-    Image: int = 12
-    ImageRef: int = 13
-    CodeInline: int = 14
-    MathInline: int = 15
-    Link: int = 16
-    LinkRef: int = 17
-    Math: int = 18
-    List: int = 19
-    TableHeader: int = 20
-    TableRow: int = 21
-    TableCell: int = 22
-    Code: int = 23
-    Strong: int = 24
-    HorizontalRule: int = 25
-    MdxFlowExpression: int = 26
-    MdxJsxFlowElement: int = 27
-    MdxJsxTextElement: int = 28
-    MdxTextExpression: int = 29
-    MdxJsEsm: int = 30
-    Text: int = 31
-    Empty: int = 32
+    Blockquote = 1
+    Break = 2
+    Definition = 3
+    Delete = 4
+    Heading = 5
+    Emphasis = 6
+    Footnote = 7
+    FootnoteRef = 8
+    Html = 9
+    Yaml = 10
+    Toml = 11
+    Image = 12
+    ImageRef = 13
+    CodeInline = 14
+    MathInline = 15
+    Link = 16
+    LinkRef = 17
+    Math = 18
+    List = 19
+    TableHeader = 20
+    TableRow = 21
+    TableCell = 22
+    Code = 23
+    Strong = 24
+    HorizontalRule = 25
+    MdxFlowExpression = 26
+    MdxJsxFlowElement = 27
+    MdxJsxTextElement = 28
+    MdxTextExpression = 29
+    MdxJsEsm = 30
+    Text = 31
+    Empty = 32
 
 class Point:
     """A location in the source document (1-based)."""
@@ -121,12 +145,13 @@ class MQValue:
         """
 
     @property
-    def array(self) -> List["MQValue"]:
+    def values(self) -> List["MQValue"]:
         """
-        Get the value as an array.
+        Get the value as a list of values.
 
         Returns:
-            List[MQValue]: The value as an array of MQValue objects
+            List[MQValue]: The elements if this value is an array,
+            otherwise a list containing only this value.
         """
 
     @property
@@ -154,6 +179,7 @@ class MQValue:
             True if this value is a markdown node, False otherwise
         """
 
+    def __getitem__(self, idx: int) -> "MQValue": ...
     def __str__(self) -> str: ...
     def __repr__(self) -> str: ...
     def __bool__(self) -> bool: ...
@@ -166,11 +192,7 @@ class MQValue:
 class MQResult:
     """
     Result of a query execution.
-    Attributes:
-        values: A list of MQValue objects returned by the query
     """
-
-    values: List[MQValue]
 
     @property
     def text(self) -> str:
@@ -193,7 +215,22 @@ class MQResult:
             List of non-empty text values as strings
         """
 
-    def __contains__(self, item: str) -> bool: ...
+    def render(self, output_format: Optional[OutputFormat] = None) -> str:
+        """
+        Render the result in the given output format.
+
+        The rendering options (list_style, link_title_style, link_url_style)
+        passed to `run` are applied.
+
+        Args:
+            output_format: The output format. If None, the `output_format` of
+                the options passed to `run` is used (Markdown by default).
+
+        Returns:
+            The rendered result as a string
+        """
+
+    def __contains__(self, item: "MQValue") -> bool: ...
     def __getitem__(self, idx: int) -> MQValue: ...
     def __len__(self) -> int: ...
     def __str__(self) -> str: ...
@@ -240,4 +277,19 @@ def run(code: str, content: str, options: Optional[Options] = None) -> MQResult:
         print(result.text)
         # Output: "# Title\n## Subtitle"
         ```
+    """
+
+def html_to_markdown(content: str, options: Optional[ConversionOptions] = None) -> str:
+    """
+    Convert HTML to Markdown.
+
+    Args:
+        content: The HTML content to convert
+        options: Conversion options. If None, default options are used.
+
+    Returns:
+        The converted Markdown
+
+    Raises:
+        RuntimeError: If the conversion fails
     """

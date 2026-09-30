@@ -14,7 +14,7 @@
 //! # Installation
 //!
 //! ```bash
-//! pip install mq
+//! pip install markdown-query
 //! ```
 //!
 //! # Python Usage
@@ -76,16 +76,27 @@
 //!
 //! result = mq.run('.', markdown, options)
 //! ```
+//!
+//! Options can also be passed as keyword arguments, and results can be
+//! rendered as Markdown, HTML or plain text:
+//!
+//! ```python
+//! import mq
+//!
+//! options = mq.Options(output_format=mq.OutputFormat.HTML)
+//! result = mq.run('.h1', '# Hello', options)
+//! print(result.render())
+//! ```
 pub mod result;
 pub mod value;
 
 use pyo3::prelude::*;
 use result::MQResult;
-use value::{MQValue, Point, Position};
+use value::{MQValue, MarkdownType, Point, Position};
 
 #[pyclass(eq, eq_int, from_py_object)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-enum InputFormat {
+pub enum InputFormat {
     #[pyo3(name = "MARKDOWN")]
     #[default]
     Markdown,
@@ -135,24 +146,73 @@ pub enum UrlSurroundStyle {
     None,
 }
 
+/// Output format used by `MQResult.render()`.
+#[pyclass(eq, eq_int, from_py_object)]
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub enum OutputFormat {
+    #[pyo3(name = "MARKDOWN")]
+    #[default]
+    Markdown,
+    #[pyo3(name = "HTML")]
+    Html,
+    #[pyo3(name = "TEXT")]
+    Text,
+}
+
 #[pyclass(eq, from_py_object)]
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
-struct Options {
+pub struct Options {
     #[pyo3(get, set)]
-    input_format: Option<InputFormat>,
+    pub input_format: Option<InputFormat>,
     #[pyo3(get, set)]
-    list_style: Option<ListStyle>,
+    pub output_format: Option<OutputFormat>,
     #[pyo3(get, set)]
-    link_title_style: Option<TitleSurroundStyle>,
+    pub list_style: Option<ListStyle>,
     #[pyo3(get, set)]
-    link_url_style: Option<UrlSurroundStyle>,
+    pub link_title_style: Option<TitleSurroundStyle>,
+    #[pyo3(get, set)]
+    pub link_url_style: Option<UrlSurroundStyle>,
 }
 
 #[pymethods]
 impl Options {
     #[new]
-    pub fn new() -> Self {
-        Self::default()
+    #[pyo3(signature = (input_format=None, output_format=None, list_style=None, link_title_style=None, link_url_style=None))]
+    pub fn new(
+        input_format: Option<InputFormat>,
+        output_format: Option<OutputFormat>,
+        list_style: Option<ListStyle>,
+        link_title_style: Option<TitleSurroundStyle>,
+        link_url_style: Option<UrlSurroundStyle>,
+    ) -> Self {
+        Self {
+            input_format,
+            output_format,
+            list_style,
+            link_title_style,
+            link_url_style,
+        }
+    }
+}
+
+impl Options {
+    pub(crate) fn render_options(&self) -> mq_markdown::RenderOptions {
+        mq_markdown::RenderOptions {
+            list_style: match self.list_style.unwrap_or_default() {
+                ListStyle::Dash => mq_markdown::ListStyle::Dash,
+                ListStyle::Plus => mq_markdown::ListStyle::Plus,
+                ListStyle::Star => mq_markdown::ListStyle::Star,
+            },
+            link_title_style: match self.link_title_style.unwrap_or_default() {
+                TitleSurroundStyle::Double => mq_markdown::TitleSurroundStyle::Double,
+                TitleSurroundStyle::Single => mq_markdown::TitleSurroundStyle::Single,
+                TitleSurroundStyle::PAREN => mq_markdown::TitleSurroundStyle::Paren,
+            },
+            link_url_style: match self.link_url_style.unwrap_or_default() {
+                UrlSurroundStyle::Angle => mq_markdown::UrlSurroundStyle::Angle,
+                UrlSurroundStyle::None => mq_markdown::UrlSurroundStyle::None,
+            },
+        }
     }
 }
 
@@ -190,13 +250,18 @@ fn run(code: &str, content: &str, options: Option<Options>) -> PyResult<MQResult
         InputFormat::Null => Ok(mq_lang::null_input()),
     }
     .map_err(|e| {
-        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Error evaluating query: {}", e))
+        PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!("Error parsing input: {}", e))
     })?;
 
     engine
         .eval(code, input.into_iter())
-        .map(|values| MQResult {
-            values: values.into_iter().map(Into::into).collect::<Vec<_>>(),
+        .map(|values| {
+            let nodes = values.clone().into_markdown_nodes();
+            MQResult {
+                values: values.into_iter().map(Into::into).collect::<Vec<_>>(),
+                nodes,
+                options,
+            }
         })
         .map_err(|e| {
             PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
@@ -235,11 +300,13 @@ fn mq(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<ListStyle>()?;
     m.add_class::<UrlSurroundStyle>()?;
     m.add_class::<TitleSurroundStyle>()?;
+    m.add_class::<OutputFormat>()?;
     m.add_class::<Options>()?;
     m.add_class::<MQResult>()?;
     m.add_class::<MQValue>()?;
     m.add_class::<Position>()?;
     m.add_class::<Point>()?;
+    m.add_class::<MarkdownType>()?;
     m.add_class::<ConversionOptions>()?;
     m.add_function(wrap_pyfunction!(run, m)?)?;
     m.add_function(wrap_pyfunction!(html_to_markdown, m)?)?;
