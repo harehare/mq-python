@@ -20,12 +20,12 @@ impl From<mq_markdown::Position> for Position {
     fn from(p: mq_markdown::Position) -> Self {
         Self {
             start: Point {
-                line: p.start.line,
-                column: p.start.column,
+                line: p.start.line as usize,
+                column: p.start.column as usize,
             },
             end: Point {
-                line: p.end.line,
-                column: p.end.column,
+                line: p.end.line as usize,
+                column: p.end.column as usize,
             },
         }
     }

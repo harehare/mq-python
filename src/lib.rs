@@ -198,11 +198,11 @@ impl Options {
 impl Options {
     pub(crate) fn render_options(&self) -> mq_markdown::RenderOptions {
         mq_markdown::RenderOptions {
-            list_style: match self.list_style.unwrap_or_default() {
+            list_style: Some(match self.list_style.unwrap_or_default() {
                 ListStyle::Dash => mq_markdown::ListStyle::Dash,
                 ListStyle::Plus => mq_markdown::ListStyle::Plus,
                 ListStyle::Star => mq_markdown::ListStyle::Star,
-            },
+            }),
             link_title_style: match self.link_title_style.unwrap_or_default() {
                 TitleSurroundStyle::Double => mq_markdown::TitleSurroundStyle::Double,
                 TitleSurroundStyle::Single => mq_markdown::TitleSurroundStyle::Single,
@@ -212,6 +212,7 @@ impl Options {
                 UrlSurroundStyle::Angle => mq_markdown::UrlSurroundStyle::Angle,
                 UrlSurroundStyle::None => mq_markdown::UrlSurroundStyle::None,
             },
+            mdx: matches!(self.input_format, Some(InputFormat::Mdx)),
         }
     }
 }
