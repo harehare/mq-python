@@ -213,6 +213,7 @@ impl Options {
                 UrlSurroundStyle::None => mq_markdown::UrlSurroundStyle::None,
             },
             mdx: matches!(self.input_format, Some(InputFormat::Mdx)),
+            ..mq_markdown::RenderOptions::default()
         }
     }
 }
