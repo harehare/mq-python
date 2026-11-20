@@ -21,6 +21,7 @@ jobs:
         with:
           cache: false
           rustflags: ""
+          build-warnings: ""
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v7.1.0
